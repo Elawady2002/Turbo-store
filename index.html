@@ -1099,7 +1099,10 @@
     dots = document.querySelectorAll('.dot');
   }
 
-  async function fetchProducts() {
+    let allProducts = [];
+    let currentCategory = 'all';
+
+    async function fetchProducts() {
       const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
       const productGrid = document.getElementById('productGrid');
 
@@ -1224,38 +1227,36 @@
     window.location.href = `product-detail.html?id=${encodeURIComponent(product.id || '')}`;
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    fetchHeroImages();
-    let allProducts = [];
-    let currentCategory = 'all';
+  async function fetchStoreData() {
+    await fetchCategories();
+    await fetchHeroImages();
+    await fetchProducts();
+  }
 
-    async function fetchStoreData() {
-      await fetchCategories();
-      await fetchHeroImages();
-      await fetchProducts();
+  async function fetchCategories() {
+    const { data, error } = await supabaseClient.from('categories').select('*').order('name');
+    if (error) {
+      console.warn('Categories table might not exist yet:', error.message);
+      return;
     }
-
-    async function fetchCategories() {
-      const { data, error } = await supabaseClient.from('categories').select('*').order('name');
-      if (error) {
-        console.warn('Categories table might not exist yet:', error.message);
-        return;
-      }
-      if (data && data.length > 0) {
-        const tabsContainer = document.getElementById('filterTabs');
+    if (data && data.length > 0) {
+      const tabsContainer = document.getElementById('filterTabs');
+      if (tabsContainer) {
         const allTab = '<button class="filter-tab active" data-category="all" onclick="filterByCategory(\'all\', this)">All</button>';
         const catTabs = data.map(cat => `<button class="filter-tab" data-category="${escapeHtml(cat.name)}" onclick="filterByCategory('${escapeHtml(cat.name)}', this)">${escapeHtml(cat.name)}</button>`).join('');
         tabsContainer.innerHTML = allTab + catTabs;
       }
     }
+  }
 
-    window.filterByCategory = (category, btn) => {
-      currentCategory = category;
-      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
-      renderProducts();
-    };
+  window.filterByCategory = (category, btn) => {
+    currentCategory = category;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    renderProducts();
+  };
 
+  document.addEventListener('DOMContentLoaded', () => {
     fetchStoreData();
   });
 </script>
