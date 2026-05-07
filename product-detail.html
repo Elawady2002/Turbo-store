@@ -329,6 +329,54 @@
     .add-to-cart-btn:hover { background: #333; }
     .add-to-cart-btn:active { transform: scale(0.98); }
 
+    /* Quantity Selector */
+    .quantity-selector {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .quantity-label {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--gray-200);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .qty-btn {
+      width: 44px;
+      height: 44px;
+      background: var(--white);
+      border: none;
+      font-size: 18px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .qty-btn:hover { background: var(--gray-50); }
+    .qty-input {
+      width: 50px;
+      height: 44px;
+      border: none;
+      border-left: 1px solid var(--gray-200);
+      border-right: 1px solid var(--gray-200);
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      background: #fff;
+    }
+    .qty-input::-webkit-inner-spin-button, .qty-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
     /* Details Accordion */
     .details-section {
       border-top: 1px solid var(--gray-200);
@@ -461,6 +509,14 @@
           <button class="size-btn" onclick="selectSize(this)">L</button>
           <button class="size-btn" onclick="selectSize(this)">XL</button>
           <button class="size-btn" onclick="selectSize(this)">XXL</button>
+        </div>
+      </div>
+      <div class="quantity-selector">
+        <span class="quantity-label">Quantity</span>
+        <div class="qty-controls">
+          <button class="qty-btn" onclick="updateQty(-1)">−</button>
+          <input type="number" id="productQty" class="qty-input" value="1" min="1" readonly />
+          <button class="qty-btn" onclick="updateQty(1)">+</button>
         </div>
       </div>
 
@@ -659,12 +715,22 @@
       item.classList.toggle('open');
     }
 
+    function updateQty(delta) {
+      const input = document.getElementById('productQty');
+      let val = parseInt(input.value) || 1;
+      val += delta;
+      if (val < 1) val = 1;
+      input.value = val;
+    }
+
     function handleAddToCart() {
       const currentLang = localStorage.getItem('storeLang') || 'en';
       if (!selectedSize) {
         alert(currentLang === 'ar' ? 'يرجى اختيار المقاس أولاً' : 'Please select a size first.');
         return;
       }
+
+      const qty = parseInt(document.getElementById('productQty').value) || 1;
 
       // Add to localStorage cart
       const cart = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -680,17 +746,24 @@
         imageUrl = imgEl.src;
       }
       
-      cart.push({ 
-        name: itemName, 
-        price: numericPrice,
-        size: selectedSize,
-        color: selectedColor,
-        image: imageUrl,
-        quantity: 1
-      });
+      // Check if item already exists in cart with same size and color
+      const existingIndex = cart.findIndex(item => item.name === itemName && item.size === selectedSize && item.color === selectedColor);
+      
+      if (existingIndex > -1) {
+        cart[existingIndex].quantity = (cart[existingIndex].quantity || 0) + qty;
+      } else {
+        cart.push({ 
+          name: itemName, 
+          price: numericPrice,
+          size: selectedSize,
+          color: selectedColor,
+          image: imageUrl,
+          quantity: qty
+        });
+      }
       
       // Calculate total correctly from array
-      const total = cart.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
+      const total = cart.reduce((sum, item) => sum + (parseFloat(item.price) * (item.quantity || 1)), 0);
 
       localStorage.setItem('cart', JSON.stringify(cart));
       localStorage.setItem('cartTotal', total);
