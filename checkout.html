@@ -509,12 +509,13 @@
 
     cart.forEach(item => {
       let itemPrice = parseFloat(item.price) || 0;
-      subtotal += itemPrice;
+      let qty = parseInt(item.quantity || 1);
+      subtotal += (itemPrice * qty);
       
       // Calculate discount
       if (appliedCoupon) {
         if (!appliedCoupon.product_id || appliedCoupon.product_id == item.productId) {
-          discountAmount += itemPrice * (appliedCoupon.discount_percentage / 100);
+          discountAmount += (itemPrice * qty) * (appliedCoupon.discount_percentage / 100);
         }
       }
     });
@@ -634,7 +635,7 @@
 
   function loadCheckout() {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
+    const subtotal = cart.reduce((sum, item) => sum + ((parseFloat(item.price) || 0) * (parseInt(item.quantity || 1))), 0);
 
     if (cart.length === 0) {
       const layout = document.querySelector('.checkout-layout');
@@ -648,7 +649,15 @@
       cart.forEach(item => {
         const div = document.createElement('div');
         div.className = 'cart-item';
-        div.innerHTML = `<span>${item.name}</span><span>LE ${(parseFloat(item.price) || 0).toLocaleString()}.00</span>`;
+        const qty = parseInt(item.quantity || 1);
+        const itemTotal = (parseFloat(item.price) || 0) * qty;
+        div.innerHTML = `
+          <div style="flex:1;">
+            <span>${item.name}</span>
+            <div style="font-size:11px; color:#666;">Qty: ${qty} x LE ${(parseFloat(item.price) || 0).toLocaleString()}</div>
+          </div>
+          <span>LE ${itemTotal.toLocaleString()}.00</span>
+        `;
         itemsContainer.appendChild(div);
       });
     }
@@ -694,8 +703,8 @@
       const governorateName = govOpt ? govOpt.textContent : '';
       const phone = document.getElementById('phone').value;
       const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
-      const total = subtotal + shippingCost;
+      const subtotal = cart.reduce((sum, item) => sum + ((parseFloat(item.price) || 0) * (parseInt(item.quantity || 1))), 0);
+      const total = subtotal - discountAmount + shippingCost;
 
       if (!supabaseClient) throw new Error("Supabase client not initialized");
 
