@@ -569,8 +569,8 @@
     let selectedSize = null;
     let selectedColor = null;
     let currentView = 'front'; // 'front' or 'back'
-    let currentProductName = 'CAVEN SUIT – BLACK';
-    let currentProductPrice = 1200;
+    let currentProductName = '';
+    let currentProductPrice = 0;
     let currentStoredProduct = null;
 
     function renderProductDetails(storedProduct) {
@@ -700,7 +700,7 @@
       const cart = JSON.parse(localStorage.getItem('cart') || '[]');
       const countEl = document.getElementById('cartCount');
       if (countEl) {
-        countEl.textContent = cart.length;
+        countEl.textContent = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
       }
     }
 

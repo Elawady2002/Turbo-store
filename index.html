@@ -1258,12 +1258,13 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     fetchStoreData();
+    updateCartUI();
   });
 </script>
 
 <script>
   let cartCount = 0;
-  let cart = [];
+  let cart = JSON.parse(localStorage.getItem('cart') || '[]');
 
   function openCart() {
     document.getElementById('cartDrawer').classList.add('open');
@@ -1299,8 +1300,8 @@
     const t = storeTranslations[storeLang];
 
     // Calculate total and count correctly
-    cartCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-    cartTotalValue = cart.reduce((sum, item) => sum + (parseFloat(item.price) * (item.quantity || 1)), 0);
+    cartCount = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    cartTotalValue = cart.reduce((sum, item) => sum + (parseFloat(item.price) * (item.quantity || 0)), 0);
     
     if (countEl) countEl.textContent = cartCount;
     if (drawerHeader) drawerHeader.textContent = `${t.cartTitle} (${cartCount})`;
