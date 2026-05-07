@@ -425,10 +425,6 @@
         <!-- Thumbnails dynamically added here -->
       </div>
       <div class="main-image">
-        <div class="view-tabs" id="viewTabsContainer" style="display:none;">
-          <button class="view-tab-btn active" id="tabFront" onclick="switchView('front')">Front</button>
-          <button class="view-tab-btn" id="tabBack" onclick="switchView('back')">Back</button>
-        </div>
         <img src="" alt="Product Image" id="productImage" />
       </div>
     </div>
@@ -605,52 +601,20 @@
       }
     });
 
-
     function selectColor(btn, colorObj, idx) {
       document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       selectedColor = colorObj.color;
-      
-      updateViewTabs(colorObj);
       renderImagesForCurrentView(colorObj);
-    }
-
-    function updateViewTabs(colorObj) {
-      const tabs = document.getElementById('viewTabsContainer');
-      const hasFront = Array.isArray(colorObj.frontImages) && colorObj.frontImages.length > 0;
-      const hasBack = Array.isArray(colorObj.backImages) && colorObj.backImages.length > 0;
-      
-      if (hasFront || hasBack) {
-        tabs.style.display = 'flex';
-        document.getElementById('tabFront').style.display = hasFront ? 'block' : 'none';
-        document.getElementById('tabBack').style.display = hasBack ? 'block' : 'none';
-        
-        if (currentView === 'front' && !hasFront) switchView('back');
-        if (currentView === 'back' && !hasBack) switchView('front');
-      } else {
-        tabs.style.display = 'none';
-      }
-    }
-
-    function switchView(view) {
-      currentView = view;
-      document.querySelectorAll('.view-tab-btn').forEach(b => b.classList.remove('active'));
-      if (view === 'front') document.getElementById('tabFront').classList.add('active');
-      if (view === 'back') document.getElementById('tabBack').classList.add('active');
-      
-      if (currentStoredProduct && selectedColor) {
-        const colorObj = currentStoredProduct.colors.find(c => c.color === selectedColor);
-        if (colorObj) renderImagesForCurrentView(colorObj);
-      }
     }
 
     function renderImagesForCurrentView(colorObj) {
       let imgs = [];
-      if (currentView === 'front' && Array.isArray(colorObj.frontImages) && colorObj.frontImages.length) {
-        imgs = colorObj.frontImages;
-      } else if (currentView === 'back' && Array.isArray(colorObj.backImages) && colorObj.backImages.length) {
-        imgs = colorObj.backImages;
-      } else if (Array.isArray(colorObj.images) && colorObj.images.length) {
+      // Combine front and back images to show them together in thumbnails
+      if (Array.isArray(colorObj.frontImages)) imgs = imgs.concat(colorObj.frontImages);
+      if (Array.isArray(colorObj.backImages)) imgs = imgs.concat(colorObj.backImages);
+      
+      if (imgs.length === 0 && Array.isArray(colorObj.images)) {
         imgs = colorObj.images;
       }
       renderImages(imgs);
